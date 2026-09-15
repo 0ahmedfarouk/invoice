@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#006f72" />
+  <title>Qimam Al Arab — Quotation Studio</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div id="loginScreen" class="login-screen">
+    <div class="login-card">
+      <div class="brand-lockup">
+        <img src="assets/qimam-logo.png" alt="Qimam Al Arab logo" class="login-logo" />
+        <div>
+          <div class="eyebrow">QIMAM AL ARAB LIMITED COMPANY</div>
+          <h1>Quotation Studio</h1>
+          <p>Create, calculate, version and export premium quotation PDFs.</p>
+        </div>
+      </div>
+      <form id="loginForm" class="login-form" autocomplete="off">
+        <label>Email
+          <input id="loginEmail" type="email" required autocomplete="username" placeholder="name@example.com" />
+        </label>
+        <label>Password
+          <input id="loginPassword" type="password" required autocomplete="current-password" placeholder="••••••••" />
+        </label>
+        <label class="check-line"><input id="rememberLogin" type="checkbox" checked /> Keep me signed in on this device</label>
+        <button class="btn btn-primary btn-lg" type="submit">Open Studio</button>
+        <div id="loginError" class="form-error" role="alert"></div>
+      </form>
+      <div class="security-note">Local browser protection only. This static GitHub Pages build has no server-side authentication.</div>
+    </div>
+  </div>
+
+  <div id="app" class="app-shell hidden">
+    <header class="app-topbar no-print">
+      <div class="app-brand">
+        <img src="assets/qimam-logo.png" alt="Qimam Al Arab" />
+        <div><strong>Quotation Studio</strong><span>Premium PDF Builder</span></div>
+      </div>
+      <div class="top-actions">
+        <button id="saveVersionBtn" class="btn btn-soft">Save Version</button>
+        <button id="auditBtn" class="btn btn-soft">Activity Log</button>
+        <button id="printBtn" class="btn btn-outline">Print / Save PDF</button>
+        <button id="exportPdfBtn" class="btn btn-primary">Download PDF</button>
+        <button id="logoutBtn" class="icon-btn" title="Lock studio" aria-label="Lock studio">⌁</button>
+      </div>
+    </header>
+
+    <main class="workspace no-print">
+      <section class="editor-panel">
+        <div class="editor-head">
+          <div>
+            <div class="eyebrow">DOCUMENT BUILDER</div>
+            <h2>Build your quotation</h2>
+          </div>
+          <div id="saveState" class="save-state">Saved locally</div>
+        </div>
+
+        <nav class="tabbar" aria-label="Editor sections">
+          <button class="tab active" data-tab="document">Document</button>
+          <button class="tab" data-tab="items">Items <span id="itemCountBadge" class="badge">10</span></button>
+          <button class="tab" data-tab="company">Company</button>
+          <button class="tab" data-tab="output">Output</button>
+        </nav>
+
+        <div class="tab-panel active" data-panel="document">
+          <div class="section-card">
+            <h3>Quotation details</h3>
+            <div class="field-grid two">
+              <label>PDF language
+                <select id="docLanguage">
+                  <option value="en">English</option>
+                  <option value="ar">العربية</option>
+                </select>
+              </label>
+              <label>Currency
+                <select id="currency">
+                  <option value="SAR">SAR</option><option value="AED">AED</option><option value="EGP">EGP</option>
+                  <option value="USD">USD</option><option value="QAR">QAR</option><option value="KWD">KWD</option>
+                </select>
+              </label>
+              <label>Issued date<input id="issuedDate" type="date" /></label>
+              <label>Quotation reference<input id="quoteRef" type="text" placeholder="Optional e.g. Q-2026-018" /></label>
+            </div>
+            <label>Document title<input id="documentTitle" type="text" value="Product Quotation" /></label>
+            <label>Subtitle / specification<input id="documentSubtitle" type="text" placeholder="e.g. 300 TC — 80% Cotton / 20% Polyester" /></label>
+          </div>
+
+          <div class="section-card">
+            <div class="section-title-row"><h3>Optional greeting / introduction</h3><label class="switch"><input id="introEnabled" type="checkbox" /><span></span></label></div>
+            <div id="introFields" class="conditional muted-block">
+              <div class="field-grid two">
+                <label>Preset
+                  <select id="introPreset">
+                    <option value="business">Business</option>
+                    <option value="wedding">Wedding & Events</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </label>
+                <label>Recipient company / client<input id="recipientName" type="text" placeholder="e.g. Al Noor Events" /></label>
+              </div>
+              <label>English introduction<textarea id="introEn" rows="3"></textarea></label>
+              <label>المقدمة بالعربية<textarea id="introAr" rows="3" dir="rtl"></textarea></label>
+            </div>
+          </div>
+
+          <div class="section-card">
+            <div class="section-title-row"><h3>Tax</h3><label class="switch"><input id="taxEnabled" type="checkbox" checked /><span></span></label></div>
+            <div class="field-grid two">
+              <label>Tax label<input id="taxLabel" type="text" value="VAT" /></label>
+              <label>Tax rate %<input id="taxRate" type="number" min="0" max="100" step="0.01" value="15" /></label>
+            </div>
+            <div class="calculation-strip">
+              <div><span>Subtotal</span><strong id="subtotalReadout">0.00 SAR</strong></div>
+              <div><span>Tax</span><strong id="taxReadout">0.00 SAR</strong></div>
+              <div class="grand"><span>Grand Total</span><strong id="grandReadout">0.00 SAR</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-panel="items">
+          <div class="items-toolbar">
+            <div><h3>Items</h3><p>Amounts are calculated automatically.</p></div>
+            <button id="addItemBtn" class="btn btn-primary">+ Add item</button>
+          </div>
+          <div id="itemsEditor" class="items-editor"></div>
+        </div>
+
+        <div class="tab-panel" data-panel="company">
+          <div class="section-card">
+            <h3>Brand & company</h3>
+            <div class="logo-uploader">
+              <div class="logo-preview-wrap"><img id="editorLogoPreview" src="assets/qimam-logo.png" alt="Company logo preview" /></div>
+              <div>
+                <label class="file-btn">Upload logo<input id="logoUpload" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" /></label>
+                <p>Required for export. PNG with transparent background works best.</p>
+                <button id="resetLogoBtn" class="text-btn" type="button">Restore default logo</button>
+              </div>
+            </div>
+            <div class="field-grid two">
+              <label>Company name — English<input id="companyNameEn" type="text" /></label>
+              <label>اسم الشركة — عربي<input id="companyNameAr" type="text" dir="rtl" /></label>
+              <label>Address — English<textarea id="addressEn" rows="3"></textarea></label>
+              <label>العنوان — عربي<textarea id="addressAr" rows="3" dir="rtl"></textarea></label>
+              <label>Phone<input id="companyPhone" type="text" /></label>
+              <label>Email<input id="companyEmail" type="email" /></label>
+              <label>VAT number<input id="vatNumber" type="text" /></label>
+              <label>CR number<input id="crNumber" type="text" /></label>
+            </div>
+          </div>
+          <div class="section-card">
+            <h3>Previous work & contract terms</h3>
+            <label>Previous Work — English<textarea id="previousWorkEn" rows="4"></textarea></label>
+            <label>الأعمال السابقة — عربي<textarea id="previousWorkAr" rows="4" dir="rtl"></textarea></label>
+            <label>Supply terms — English <span class="hint">one term per line</span><textarea id="termsEn" rows="5"></textarea></label>
+            <label>شروط التوريد — عربي <span class="hint">شرط واحد بكل سطر</span><textarea id="termsAr" rows="5" dir="rtl"></textarea></label>
+          </div>
+        </div>
+
+        <div class="tab-panel" data-panel="output">
+          <div class="section-card">
+            <h3>PDF & pagination</h3>
+            <div class="field-grid two">
+              <label>Items per page
+                <select id="itemsPerPage"><option>8</option><option selected>10</option><option>12</option></select>
+              </label>
+              <label>PDF file name<input id="pdfFilename" type="text" value="Qimam_Quotation" /></label>
+            </div>
+            <label class="check-line"><input id="repeatHeader" type="checkbox" checked /> Repeat full company header on additional pages</label>
+            <label class="check-line"><input id="showPageNumbers" type="checkbox" checked /> Show page numbers when PDF has multiple pages</label>
+          </div>
+          <div class="section-card accent-card">
+            <h3>Mandatory export note</h3>
+            <p>Every PDF export is saved to the local activity log with its totals, item count, language, and this note.</p>
+            <label>Change / export note<textarea id="changeNote" rows="3" placeholder="Example: Final prices approved by management" required></textarea></label>
+          </div>
+          <div class="section-card">
+            <h3>Local versions</h3>
+            <p>Save snapshots before major edits. Everything stays in this browser only.</p>
+            <div class="button-row"><button id="saveVersionInlineBtn" class="btn btn-soft">Save current version</button><button id="openVersionsBtn" class="btn btn-outline">Open saved versions</button></div>
+          </div>
+          <div class="section-card danger-zone">
+            <h3>Reset</h3><p>Restore the original sample and company defaults.</p>
+            <button id="resetAllBtn" class="btn btn-danger">Reset studio data</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="preview-panel">
+        <div class="preview-head">
+          <div><span class="live-dot"></span> Live PDF preview</div>
+          <div id="pageCounter">1 page</div>
+        </div>
+        <div id="pdfPreview" class="pdf-preview"></div>
+      </section>
+    </main>
+
+    <div id="printRoot" class="print-root"></div>
+  </div>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <dialog id="auditDialog" class="modal">
+    <div class="modal-head"><div><div class="eyebrow">LOCAL AUDIT TRAIL</div><h2>Activity Log</h2></div><button class="icon-btn close-dialog">×</button></div>
+    <div class="modal-actions"><button id="downloadLogBtn" class="btn btn-outline">Download CSV</button><button id="clearLogBtn" class="btn btn-danger-soft">Clear log</button></div>
+    <div id="auditList" class="audit-list"></div>
+  </dialog>
+
+  <dialog id="versionsDialog" class="modal">
+    <div class="modal-head"><div><div class="eyebrow">LOCAL SNAPSHOTS</div><h2>Saved Versions</h2></div><button class="icon-btn close-dialog">×</button></div>
+    <div id="versionsList" class="versions-list"></div>
+  </dialog>
+</body>
+</html>
